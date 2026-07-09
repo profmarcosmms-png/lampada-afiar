@@ -7,7 +7,7 @@
 
 // Ao mudar qualquer arquivo (index.html, ícone, manifest), aumente a
 // versão abaixo para forçar os aparelhos a baixarem a nova versão.
-const CACHE_NAME = 'lampada-afiar-v1';
+const CACHE_NAME = 'lampada-afiar-v2';
 
 // Arquivos que compõem o app e devem ficar disponíveis offline:
 const APP_SHELL = [
