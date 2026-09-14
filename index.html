@@ -6,6 +6,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>LÂMPADA — Exegese e Hermenêutica</title>
+
+<!-- APLICA TEMA ANTES DO CSS PARA EVITAR "FLASH OF WRONG THEME" -->
+<script>
+  (function(){
+    try{
+      var t = localStorage.getItem('lampada_tema') || 'escuro';
+      if(t === 'claro'){
+        document.documentElement.setAttribute('data-theme','light');
+      }
+    }catch(e){}
+  })();
+</script>
+
 <style>
   /* Fontes com fallback seguro para funcionar 100% offline no iPad */
   :root{
@@ -28,6 +41,95 @@
     --display: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
     --body: Georgia, "Iowan Old Style", serif;
     --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     🌞 MODO CLARO — paleta "pergaminho iluminado"
+     Mantém as cores AFIAR (brasa + dourado) sobre fundos claros.
+     Ativado com: <html data-theme="light">
+     ══════════════════════════════════════════════════════════════════ */
+  html[data-theme="light"]{
+    --bg-void:        #faf5ea;   /* fundo geral — pergaminho claro */
+    --bg-altar:       #f4ecd8;   /* cards */
+    --bg-card:        #ede2c8;   /* cards internos */
+    --bg-card-raised: #e5d7b8;   /* cards em destaque */
+    --parchment:      #2a1d12;   /* texto principal — tinta marrom */
+    --parchment-dim:  #6b5844;   /* texto secundário */
+    --ink:            #f4ecd8;   /* inverso */
+    --ember:          #a04a12;   /* brasa mais escura para contraste */
+    --ember-bright:   #c95a1e;   /* brasa média (destaque) */
+    --ember-deep:     #5a2308;   /* brasa profunda */
+    --gold:           #9a7a30;   /* dourado escurecido */
+    --gold-soft:      #7d6329;   /* dourado dim */
+    --line:           rgba(160,74,18,0.18);
+    --line-bright:    rgba(160,74,18,0.4);
+  }
+  /* Ajustes específicos do modal de configurações no modo claro */
+  html[data-theme="light"] #cfgModalBox{
+    background: linear-gradient(180deg, #faf5ea 0%, #f4ecd8 100%);
+    color: #2a1d12;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 0 60px rgba(201,98,31,0.08);
+  }
+  html[data-theme="light"] #cfgModalBox h2{ color:#2a1d12; }
+  html[data-theme="light"] #cfgModalBox .cfg-subtitle{ color:rgba(42,29,18,0.6); }
+  html[data-theme="light"] #cfgModalBox label{ color:rgba(42,29,18,0.85); }
+  html[data-theme="light"] #cfgModalBox input[type="text"],
+  html[data-theme="light"] #cfgModalBox input[type="password"]{
+    background:#fff; color:#2a1d12; border:1px solid rgba(160,74,18,0.35);
+  }
+  html[data-theme="light"] #cfgModalBox .cfg-hint{ color:rgba(42,29,18,0.55); }
+  html[data-theme="light"] #cfgModalBox .cfg-section{
+    background:rgba(255,255,255,0.5); border-color:rgba(160,74,18,0.2);
+  }
+  html[data-theme="light"] #cfgModalBox .cfg-section-title{ color:#a04a12; }
+  html[data-theme="light"] #cfgModal{ background:rgba(42,29,18,0.65); }
+  html[data-theme="light"] #cfgModalBox .cfg-close{ color:rgba(42,29,18,0.6); }
+  html[data-theme="light"] #cfgAdminSection{ border-color:#c0574f; background:rgba(255,240,238,0.6); }
+  html[data-theme="light"] #cfgAdminSection .cfg-section-title{ color:#a83226; }
+
+  /* Botão flutuante Instalar no modo claro — mantém contraste */
+  html[data-theme="light"] #lampada-install-btn{
+    background: linear-gradient(180deg, #c95a1e, #7a2f0c);
+    color:#fff5e6; border-color:#a04a12;
+  }
+
+  /* Botão "Nova busca" no modo claro */
+  html[data-theme="light"] .lampada-back-btn{
+    background: linear-gradient(180deg, #f4ecd8, #ede2c8);
+    color:#2a1d12; border-color:#a04a12;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  }
+
+  /* CORREÇÃO CRÍTICA: no modo claro, campos em edição precisam de FUNDO CLARO
+     (o efeito de "escurecer ao focar" do tema escuro deixaria o texto ilegível) */
+  html[data-theme="light"] .ff input:focus,
+  html[data-theme="light"] .ff textarea:focus{
+    background: #ffffff;
+    color: #2a1d12;
+  }
+  html[data-theme="light"] .ff input,
+  html[data-theme="light"] .ff textarea{
+    background: rgba(255,255,255,0.55);
+    color: #2a1d12;
+  }
+  html[data-theme="light"] .ff input::placeholder,
+  html[data-theme="light"] .ff textarea::placeholder{
+    color: rgba(42,29,18,0.4);
+  }
+  /* Outros campos de texto do app também */
+  html[data-theme="light"] input[type="text"],
+  html[data-theme="light"] input[type="search"],
+  html[data-theme="light"] input[type="tel"],
+  html[data-theme="light"] textarea{
+    background: rgba(255,255,255,0.55);
+    color: #2a1d12;
+  }
+  html[data-theme="light"] input[type="text"]:focus,
+  html[data-theme="light"] input[type="search"]:focus,
+  html[data-theme="light"] input[type="tel"]:focus,
+  html[data-theme="light"] textarea:focus{
+    background: #ffffff;
+    color: #2a1d12;
   }
 
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color: transparent;}
@@ -374,18 +476,18 @@
   .contrib-head .ch-sub{ font-family:var(--ui); font-size:12px; color:var(--parchment-dim); margin-top:4px; }
   .contrib-body{ padding:18px; }
 
-  .oica-stage{ border-left:3px solid var(--ember-deep); padding-left:14px; margin-bottom:20px; }
-  .oica-stage .stage-tag{ font-family:var(--display); font-weight:800; font-size:15px; color:var(--ember-bright); margin-bottom:3px; }
-  .oica-stage .stage-desc{ font-family:var(--ui); font-size:12px; color:var(--parchment-dim); margin-bottom:12px; }
+  .oica-stage{ border-left:4px solid var(--ember-deep); padding-left:16px; margin-bottom:14px; }
+  .oica-stage .stage-tag{ font-family:var(--display); font-weight:800; font-size:16px; color:var(--ember-bright); margin-bottom:4px; letter-spacing:0.2px; }
+  .oica-stage .stage-desc{ font-family:var(--ui); font-size:13px; line-height:1.5; color:var(--parchment); opacity:0.75; margin-bottom:10px; }
 
-  .ff{ margin-bottom:14px; }
-  .ff label{ display:block; font-family:var(--ui); font-size:12px; font-weight:700; color:var(--parchment); margin-bottom:6px; }
+  .ff{ margin-bottom:11px; }
+  .ff label{ display:block; font-family:var(--ui); font-size:14px; font-weight:700; color:var(--parchment); margin-bottom:5px; letter-spacing:0.1px; }
   .ff label .req{ color:var(--ember-bright); margin-left:3px; }
-  .ff input, .ff textarea{ width:100%; background:var(--bg-altar); border:1px solid var(--line); border-radius:7px; padding:12px 13px; color:var(--parchment); font-family:var(--body); font-size:15px; }
+  .ff input, .ff textarea{ width:100%; box-sizing:border-box; background:var(--bg-altar); border:1px solid var(--line); border-radius:8px; padding:14px 14px; color:var(--parchment); font-family:var(--body); font-size:16px; }
   .ff input{ font-family:var(--ui); }
-  .ff textarea{ min-height:72px; resize:vertical; line-height:1.55; }
-  .ff input:focus, .ff textarea:focus{ outline:none; border-color:var(--ember-bright); box-shadow:0 0 0 3px rgba(201,98,31,0.12); }
-  .ff .cc{ font-family:var(--ui); font-size:11px; color:var(--parchment-dim); text-align:right; margin-top:3px; }
+  .ff textarea{ min-height:90px; resize:vertical; line-height:1.6; }
+  .ff input:focus, .ff textarea:focus{ outline:none; border-color:var(--ember-bright); box-shadow:0 0 0 3px rgba(201,98,31,0.15); background:rgba(26,18,12,0.85); }
+  .ff .cc{ font-family:var(--ui); font-size:12px; color:var(--parchment-dim); text-align:right; margin-top:4px; }
   .ff .cc.over{ color:#e8a8a8; }
   .ff.invalid input, .ff.invalid textarea{ border-color:#c0574f; box-shadow:0 0 0 3px rgba(192,87,79,0.15); }
 
@@ -538,13 +640,6 @@
   .rev-btn-save:disabled{ opacity:0.6; }
   .rev-btn-print{ width:100%; margin-top:8px; background:transparent; border:1px solid var(--line-bright); color:var(--parchment-dim); border-radius:8px; padding:13px; font-family:var(--ui); font-weight:600; font-size:13px; cursor:pointer; }
 
-  /* Botão Corrigir OICA com IA */
-  .rev-btn-corrigir{ width:100%; background:linear-gradient(180deg,rgba(122,47,12,0.4),rgba(122,47,12,0.6)); color:var(--gold-soft); border:1px solid var(--ember-deep); border-radius:10px; padding:16px; font-family:var(--ui); font-weight:700; font-size:15px; cursor:pointer; min-height:52px; transition:all 0.2s; -webkit-tap-highlight-color:transparent; }
-  .rev-btn-corrigir:hover:not(:disabled){ background:linear-gradient(180deg,rgba(201,98,31,0.35),rgba(201,98,31,0.6)); border-color:var(--ember); }
-  .rev-btn-corrigir:disabled{ opacity:0.7; cursor:wait; }
-  .ai-correction-body h3:first-child{ margin-top:0; }
-  .ai-correction-body ul{ list-style:disc; }
-
   /* Diário de Revelações */
   .diario-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:8px; margin-bottom:12px; overflow:hidden; }
   .diario-card-head{ padding:13px 16px; background:linear-gradient(90deg,rgba(212,166,85,0.08),transparent); border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
@@ -575,11 +670,15 @@
   .qr-chip{ min-height:40px; display:inline-flex; align-items:center; }
   .quiz-opt{ min-height:52px; font-size:17px; }
   .rev-step-tab{ min-height:54px; }
-  .ff textarea{ min-height:80px; font-size:17px; }
+  .ff label{ font-size:15px; margin-bottom:6px; }
+  .ff textarea{ min-height:110px; font-size:17px; padding:15px 15px; line-height:1.6; }
   .ff input[type="text"],.ff input[type="tel"],.ff input[type="search"]{
     font-size:17px; min-height:48px; padding:14px 15px;
   }
-  .rhema-dim textarea{ font-size:17px; min-height:80px; }
+  .ff .cc{ font-size:13px; }
+  .oica-stage .stage-tag{ font-size:17px; }
+  .oica-stage .stage-desc{ font-size:14px; line-height:1.55; }
+  .rhema-dim textarea{ font-size:17px; min-height:100px; }
   .strong-lemma{ font-size:38px; }
   .strong-lemma.greek{ font-size:34px; }
   .verse .vtext{ font-size:19px; }
@@ -631,6 +730,32 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+<!-- ============================================= -->
+<!--  FIREBASE — substitui o Google Apps Script    -->
+<!-- ============================================= -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  // ⚠ SUBSTITUA a configuração abaixo pela sua (Firebase Console → Configurações do projeto → Seus aplicativos → Web)
+  var LAMPADA_FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyAxjdb71-Mz0SR5ebT-GoQda8HRTGqtqhY",
+    authDomain:        "lampada-afiar.firebaseapp.com",
+    projectId:         "lampada-afiar",
+    storageBucket:     "lampada-afiar.firebasestorage.app",
+    messagingSenderId: "420274845124",
+    appId:             "1:420274845124:web:37d56a792030a94922e091"
+  };
+
+  try {
+    firebase.initializeApp(LAMPADA_FIREBASE_CONFIG);
+    window.LAMPADA_DB_READY = true;
+    console.log('[LÂMPADA] Firebase inicializado. Projeto:', LAMPADA_FIREBASE_CONFIG.projectId);
+  } catch (e) {
+    window.LAMPADA_DB_READY = false;
+    console.error('[LÂMPADA] Falha ao inicializar Firebase:', e);
+  }
+</script>
 
 <script>
   // Registro do Service Worker — habilita instalação e uso offline
@@ -2085,11 +2210,103 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   // CONFIGURAÇÃO DO REPOSITÓRIO COMPARTILHADO
   // Para ativar o mural compartilhado entre TODOS os usuários,
   // cole abaixo a URL do seu Web App do Google Apps Script.
-  // Deixe em branco ('') para modo local (só neste aparelho).
   // ============================================================
+  //  BACKEND — Firebase Firestore (substitui o antigo Apps Script)
+  //  Todas as chamadas do app passam pelo objeto LAMPADA_DB abaixo.
+  // ============================================================
+  var LAMPADA_DB = {
+    _db: null,
+    _get: function(){
+      if(this._db) return this._db;
+      try { this._db = firebase.firestore(); return this._db; }
+      catch(e){ console.error('[LÂMPADA_DB] Firestore indisponível:', e); return null; }
+    },
+    ativo: function(){
+      return !!(window.LAMPADA_DB_READY && typeof firebase !== 'undefined' && firebase.firestore);
+    },
+
+    // ── EXEGESES ─────────────────────────────────────────────
+    addExegese: function(item, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var doc = Object.assign({}, item, { criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      db.collection('exegeses').add(doc)
+        .then(function(ref){ onDone && onDone({ok:true, id:ref.id, modo:'compartilhado'}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+    listarExegeses: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone([]); return; }
+      db.collection('exegeses').orderBy('criadoEm','desc').limit(500).get()
+        .then(function(snap){
+          var itens = [];
+          snap.forEach(function(d){ var o = d.data(); o.id = d.id; itens.push(o); });
+          onDone && onDone(itens);
+        })
+        .catch(function(e){ console.warn('[LÂMPADA_DB] listarExegeses:', e); onDone && onDone([]); });
+    },
+
+    // ── REVELAÇÕES ───────────────────────────────────────────
+    addRevelacao: function(item, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var doc = Object.assign({}, item, { criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      db.collection('revelacoes').add(doc)
+        .then(function(ref){ onDone && onDone({ok:true, id:ref.id, modo:'compartilhado'}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+    listarRevelacoes: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone([]); return; }
+      db.collection('revelacoes').orderBy('criadoEm','desc').limit(500).get()
+        .then(function(snap){
+          var itens = [];
+          snap.forEach(function(d){ var o = d.data(); o.id = d.id; itens.push(o); });
+          onDone && onDone(itens);
+        })
+        .catch(function(e){ console.warn('[LÂMPADA_DB] listarRevelacoes:', e); onDone && onDone([]); });
+    },
+
+    // ── QUIZ ─────────────────────────────────────────────────
+    // Estrutura recomendada: coleção 'config' → documento 'quiz' → campos {tema, perguntas:[...]}
+    buscarQuiz: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone(null); return; }
+      db.collection('config').doc('quiz').get()
+        .then(function(d){ onDone && onDone(d.exists ? d.data() : null); })
+        .catch(function(e){ console.warn('[LÂMPADA_DB] buscarQuiz:', e); onDone && onDone(null); });
+    },
+
+    // ── WIPE (admin) ─────────────────────────────────────────
+    // Apaga toda a coleção em lotes de 400 documentos (limite de batch = 500).
+    wipeAll: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var colecoes = ['exegeses','revelacoes'];
+      var stats = { exegeses:0, revelacoes:0 };
+      var i = 0;
+      function proxima(){
+        if(i >= colecoes.length){ onDone && onDone({ok:true, apagados:stats}); return; }
+        var nome = colecoes[i++];
+        function loop(){
+          db.collection(nome).limit(400).get().then(function(snap){
+            if(snap.empty){ proxima(); return; }
+            var batch = db.batch();
+            snap.forEach(function(d){ batch.delete(d.ref); stats[nome]++; });
+            batch.commit().then(loop).catch(function(e){
+              onDone && onDone({ok:false, erro:e.message, apagados:stats});
+            });
+          }).catch(function(e){ onDone && onDone({ok:false, erro:e.message, apagados:stats}); });
+        }
+        loop();
+      }
+      proxima();
+    }
+  };
+
+  // Retrocompatibilidade: o resto do código chama COMPARTILHAR.ativo()
   var COMPARTILHAR = {
-    endpoint: 'https://script.google.com/macros/s/AKfycbwF7lsxgNEzgx4c4BkwYy-wxMXV9Rz27weIcc5xqZPoMiJSVf718Bq0lc83AraXTPUK/exec', // URL do Apps Script (mural compartilhado AFIAR)
-    ativo: function(){ return typeof this.endpoint==='string' && this.endpoint.indexOf('http')===0; }
+    ativo: function(){ return LAMPADA_DB.ativo(); }
   };
 
   // dados salvos localmente (cache + fila offline)
@@ -2121,74 +2338,41 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   }
 
   // ---------------------------------------------------------------
-  // COMUNICAÇÃO COM GOOGLE APPS SCRIPT
+  // COMUNICAÇÃO COM O BACKEND (Firestore)
   //
-  // O Apps Script exige uma abordagem específica de CORS:
-  //
-  // POST → modo 'no-cors': o browser não lê a resposta, mas o dado
-  //   CHEGA na planilha. Por isso guardamos localmente antes de enviar
-  //   e consideramos sucesso ao não obter erro de rede.
-  //   Usamos URLSearchParams para evitar o preflight CORS que bloquearia.
-  //
-  // GET  → modo normal com redirect:'follow': o Apps Script faz redirect
-  //   antes de devolver o JSON; sem follow, a resposta fica vazia.
-  //   Timeout manual de 12s para não travar em redes 3G lentas.
+  // Cada função guarda uma cópia local ANTES de enviar (fila offline)
+  // e usa LAMPADA_DB (adapter Firestore) para operações remotas.
+  // Assim o app continua útil mesmo sem rede.
   // ---------------------------------------------------------------
 
   function enviarExegese(item, onDone){
     addExegLocal(item); // salva localmente ANTES — garantia mesmo sem rede
-    if(!COMPARTILHAR.ativo()){ onDone({ok:true, modo:'local'}); return; }
-    try{
-      // Envia como URLSearchParams para evitar preflight CORS bloqueado
-      var params = new URLSearchParams();
-      params.append('payload', JSON.stringify(Object.assign({action:'add'}, item)));
-      fetch(COMPARTILHAR.endpoint, {
-        method: 'POST',
-        mode: 'no-cors',            // Apps Script exige no-cors para POST externo
-        body: params
-      })
-      .then(function(){
-        // no-cors: response.type = 'opaque', não conseguimos ler o corpo
-        // mas se chegou aqui sem erro, o POST foi aceito pela rede
-        onDone({ok:true, modo:'compartilhado'});
-      })
-      .catch(function(e){ onDone({ok:false, modo:'erro', erro:e.message}); });
-    }catch(e){ onDone({ok:false, modo:'erro', erro:e.message}); }
+    if(!LAMPADA_DB.ativo()){ onDone({ok:true, modo:'local'}); return; }
+    LAMPADA_DB.addExegese(item, function(r){
+      if(r && r.ok) onDone({ok:true, modo:'compartilhado'});
+      else          onDone({ok:false, modo:'erro', erro: (r && r.erro) || 'falha ao enviar'});
+    });
   }
 
   function carregarExegeses(onDone){
     var locais = getExegLocais();
-    if(!COMPARTILHAR.ativo()){ onDone(locais, 'local'); return; }
+    if(!LAMPADA_DB.ativo()){ onDone(locais, 'local'); return; }
 
-    // Timeout de 12s — redes 3G podem ser lentas
+    // Timeout de 12s como rede de segurança
     var terminado = false;
     var timer = setTimeout(function(){
       if(!terminado){ terminado=true; onDone(locais, 'offline'); }
     }, 12000);
 
-    try{
-      fetch(COMPARTILHAR.endpoint + '?action=list', {
-        method: 'GET',
-        redirect: 'follow'           // Apps Script redireciona antes de responder
-      })
-      .then(function(res){ return res.text(); })
-      .then(function(txt){
-        if(terminado) return;
-        clearTimeout(timer); terminado = true;
-        var data={itens:[]}; try{ data=JSON.parse(txt); }catch(e){}
-        var remotas = (data && Array.isArray(data.itens)) ? data.itens : [];
-        // mescla: locais pendentes (não enviados ainda) + remotas
-        var idsRemotos = {};
-        remotas.forEach(function(r){ if(r.id) idsRemotos[r.id]=true; });
-        var pendentes = locais.filter(function(l){ return !idsRemotos[l.id]; });
-        onDone(pendentes.concat(remotas), 'compartilhado');
-      })
-      .catch(function(e){
-        if(!terminado){ clearTimeout(timer); terminado=true; onDone(locais, 'offline'); }
-      });
-    }catch(e){
-      clearTimeout(timer); terminado=true; onDone(locais, 'offline');
-    }
+    LAMPADA_DB.listarExegeses(function(remotas){
+      if(terminado) return;
+      clearTimeout(timer); terminado = true;
+      // Mescla: locais pendentes (não sincronizados) + remotas
+      var idsRemotos = {};
+      remotas.forEach(function(r){ if(r.id) idsRemotos[r.id]=true; });
+      var pendentes = locais.filter(function(l){ return !idsRemotos[l.id]; });
+      onDone(pendentes.concat(remotas), 'compartilhado');
+    });
   }
 
 
@@ -2642,38 +2826,28 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   function getRevLocais(){ try{ return JSON.parse(safeStorage.get(REV_KEY,'[]')); }catch(e){ return []; } }
   function addRevLocal(item){ var l=getRevLocais(); l.unshift(item); safeStorage.set(REV_KEY,JSON.stringify(l.slice(0,500))); }
 
-  // Envia revelação ao backend (mesmo endpoint das exegeses, action='revelacao')
+  // Envia revelação ao backend (Firestore)
   function enviarRevelacao(item, onDone){
     addRevLocal(item);
-    if(!COMPARTILHAR.ativo()){ onDone({ok:true,modo:'local'}); return; }
-    try{
-      var params = new URLSearchParams();
-      params.append('payload', JSON.stringify(Object.assign({action:'revelacao'}, item)));
-      fetch(COMPARTILHAR.endpoint, {method:'POST', mode:'no-cors', body:params})
-        .then(function(){ onDone({ok:true,modo:'compartilhado'}); })
-        .catch(function(e){ onDone({ok:false,modo:'erro',erro:e.message}); });
-    }catch(e){ onDone({ok:false,modo:'erro',erro:e.message}); }
+    if(!LAMPADA_DB.ativo()){ onDone({ok:true,modo:'local'}); return; }
+    LAMPADA_DB.addRevelacao(item, function(r){
+      if(r && r.ok) onDone({ok:true,modo:'compartilhado'});
+      else          onDone({ok:false,modo:'erro',erro: (r && r.erro) || 'falha ao enviar'});
+    });
   }
 
   // Carrega revelações do servidor para o Mural de Revelações
   function carregarRevelacoes(onDone){
     var locais = getRevLocais();
-    if(!COMPARTILHAR.ativo()){ onDone(locais,'local'); return; }
+    if(!LAMPADA_DB.ativo()){ onDone(locais,'local'); return; }
     var done=false;
     var t=setTimeout(function(){ if(!done){done=true;onDone(locais,'offline');} },12000);
-    try{
-      fetch(COMPARTILHAR.endpoint+'?action=revelacoes',{method:'GET',redirect:'follow'})
-        .then(function(r){return r.text();})
-        .then(function(txt){
-          if(done) return; clearTimeout(t); done=true;
-          var d={itens:[]}; try{d=JSON.parse(txt);}catch(e){}
-          var remotas=(d&&Array.isArray(d.itens))?d.itens:[];
-          var idsR={}; remotas.forEach(function(r){if(r.id)idsR[r.id]=true;});
-          var pend=locais.filter(function(l){return !idsR[l.id];});
-          onDone(pend.concat(remotas),'compartilhado');
-        })
-        .catch(function(){ if(!done){clearTimeout(t);done=true;onDone(locais,'offline');} });
-    }catch(e){clearTimeout(t);done=true;onDone(locais,'offline');}
+    LAMPADA_DB.listarRevelacoes(function(remotas){
+      if(done) return; clearTimeout(t); done=true;
+      var idsR={}; remotas.forEach(function(r){if(r.id)idsR[r.id]=true;});
+      var pend=locais.filter(function(l){return !idsR[l.id];});
+      onDone(pend.concat(remotas),'compartilhado');
+    });
   }
 
   /* ────────────────────────────────────────────────────────────
@@ -2828,13 +3002,8 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       '<div class="form-error" id="revOicaErro" style="margin-top:14px;"></div>'+
       '<div class="form-ok" id="revOicaOk" style="margin-top:14px;"></div>'+
 
-      /* Botão de correção IA */
-      '<button class="rev-btn-corrigir" id="btnCorrigirOica" style="margin-top:16px;">'+
-        '🔍 Corrigir OICA com IA (Claude 3.5 Sonnet)'+
-      '</button>'+
-
       /* Botão de publicar exegese e avançar */
-      '<button class="rev-btn-next" id="btnPublicarExeg" style="margin-top:12px;">'+
+      '<button class="rev-btn-next" id="btnPublicarExeg" style="margin-top:16px;">'+
         '🌐 Publicar Exegese e Continuar para Essência →'+
       '</button>'+
     '</div>'+
@@ -3096,12 +3265,6 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       });
     }
 
-    /* Botão: Corrigir OICA com IA (Claude 3.5 Sonnet) */
-    var btnCorrigir = el('btnCorrigirOica');
-    if(btnCorrigir) btnCorrigir.addEventListener('click', function(){
-      corrigirOICAComIA(ref, ab);
-    });
-
     /* Botão: Publicar Exegese e Continuar para Essência (Etapa 3) */
     var btnPubExeg = el('btnPublicarExeg');
     if(btnPubExeg) btnPubExeg.addEventListener('click', function(){
@@ -3201,86 +3364,6 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
      Coleta os campos OICA, envia ao backend que chama a API do Claude,
      e mostra a análise estruturada em Markdown.
   ═════════════════════════════════════════════════════════════════════════ */
-  function corrigirOICAComIA(ref, ab){
-    var erroEl = el('revOicaErro'), okEl = el('revOicaOk'), panel = el('revOicaCorrPanel');
-    if(erroEl) erroEl.classList.remove('show');
-    if(okEl)   okEl.classList.remove('show');
-
-    /* Precisa ter pelo menos os campos essenciais para uma análise significativa */
-    var palavra    = (el('revOicaPalavra') && el('revOicaPalavra').value.trim()) || '';
-    var obs        = (el('revOicaObs')     && el('revOicaObs').value.trim())     || '';
-    var ctx        = (el('revOicaCtx')     && el('revOicaCtx').value.trim())     || '';
-    if(!palavra || !obs || !ctx){
-      if(erroEl){
-        erroEl.innerHTML = '<strong>Preencha ao menos Palavra-chave, Observação e Contexto</strong> para que a IA tenha material suficiente para analisar.';
-        erroEl.classList.add('show');
-      }
-      return;
-    }
-
-    var payload = {
-      action: 'corrigir_oica',
-      referencia: ref,
-      palavra:    palavra,
-      obs:        obs,
-      ctx:        ctx,
-      sentido:    (el('revOicaSentido')   && el('revOicaSentido').value.trim())   || '',
-      cross:      (el('revOicaCross')     && el('revOicaCross').value.trim())     || '',
-      apPessoal:  (el('revOicaApPessoal') && el('revOicaApPessoal').value.trim()) || '',
-      apColetiva: (el('revOicaApColetiva')&& el('revOicaApColetiva').value.trim())|| ''
-    };
-
-    if(!COMPARTILHAR.ativo()){
-      if(erroEl){
-        erroEl.innerHTML = 'A correção por IA requer o servidor (Apps Script) configurado. Verifique com o Ev. Marcos Monteiro.';
-        erroEl.classList.add('show');
-      }
-      return;
-    }
-
-    var btn = el('btnCorrigirOica');
-    if(btn){ btn.disabled = true; btn.textContent = '⏳ Consultando Claude (pode levar até 30s)...'; }
-
-    /* Renderiza estado de carregamento no painel */
-    if(panel){
-      panel.style.display = 'block';
-      panel.innerHTML =
-        '<div style="background:var(--bg-card-raised);border:1px solid var(--line-bright);border-radius:10px;padding:18px;text-align:center;">'+
-          '<div style="font-size:32px;margin-bottom:8px;">🤖</div>'+
-          '<div style="font-family:var(--ui);font-weight:700;color:var(--gold-soft);margin-bottom:6px;">Claude 3.5 Sonnet analisando</div>'+
-          '<div style="font-family:var(--ui);font-size:13px;color:var(--parchment-dim);">Análise teológica, hermenêutica e gramatical do seu estudo OICA</div>'+
-        '</div>';
-    }
-
-    /* Envia via POST text/plain para o Apps Script (permite ler resposta cross-origin) */
-    fetch(COMPARTILHAR.endpoint, {
-      method: 'POST',
-      headers: {'Content-Type': 'text/plain;charset=utf-8'},
-      body: JSON.stringify(payload)
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(btn){ btn.disabled = false; btn.textContent = '🔍 Corrigir OICA com IA (Claude 3.5 Sonnet)'; }
-      if(!d || !d.ok){
-        if(panel){ panel.style.display = 'none'; }
-        if(erroEl){
-          erroEl.innerHTML = '<strong>Falha na correção IA:</strong> ' + esc((d && d.erro) || 'erro desconhecido');
-          erroEl.classList.add('show');
-        }
-        return;
-      }
-      /* Renderiza a correção retornada em Markdown */
-      renderCorrecaoOICA(d.correction, d.modelo || 'Claude', d.tokens_used || 0);
-    })
-    .catch(function(err){
-      if(btn){ btn.disabled = false; btn.textContent = '🔍 Corrigir OICA com IA (Claude 3.5 Sonnet)'; }
-      if(panel){ panel.style.display = 'none'; }
-      if(erroEl){
-        erroEl.innerHTML = '<strong>Erro de comunicação:</strong> ' + esc(String(err));
-        erroEl.classList.add('show');
-      }
-    });
-  }
 
   /* Renderiza a análise IA num painel elegante e legível */
   function renderCorrecaoOICA(markdownText, modelo, tokens){
@@ -4307,19 +4390,16 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
   function carregarQuiz(){
     var st=el('quizStatus'); if(st) st.textContent='Buscando perguntas no servidor...';
-    if(!COMPARTILHAR.ativo()){ mostrarQuizDemo(); return; }
+    if(!LAMPADA_DB.ativo()){ mostrarQuizDemo(); return; }
     var terminado=false;
     var timer=setTimeout(function(){ if(!terminado){terminado=true; mostrarQuizDemo();} }, 10000);
-    fetch(COMPARTILHAR.endpoint+'?action=quiz', {method:'GET', redirect:'follow'})
-      .then(function(r){ return r.text(); })
-      .then(function(txt){
-        if(terminado) return; clearTimeout(timer); terminado=true;
-        var d={}; try{ d=JSON.parse(txt); }catch(e){}
-        var pergs = (d && Array.isArray(d.quiz) && d.quiz.length>0) ? d.quiz : null;
-        if(pergs){ iniciarQuiz(pergs, d.tema||'Quiz Bíblico'); }
-        else { mostrarQuizDemo(); }
-      })
-      .catch(function(){ if(!terminado){clearTimeout(timer);terminado=true;mostrarQuizDemo();} });
+    LAMPADA_DB.buscarQuiz(function(d){
+      if(terminado) return; clearTimeout(timer); terminado=true;
+      // Estrutura esperada em Firestore: config/quiz → {tema: '...', quiz: [...]}
+      var pergs = (d && Array.isArray(d.quiz) && d.quiz.length>0) ? d.quiz : null;
+      if(pergs){ iniciarQuiz(pergs, d.tema||'Quiz Bíblico'); }
+      else { mostrarQuizDemo(); }
+    });
   }
 
   function mostrarQuizDemo(){
@@ -4595,6 +4675,42 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   #cfgModalBox { position:relative; }
   #cfgAdminSection{ display:none; border-color:#c0574f; }
   #cfgAdminSection .cfg-section-title{ color:#e8b3ad; }
+
+  /* ── Toggle escuro/claro ── */
+  .tema-toggle{
+    display:flex; gap:10px; margin-top:6px;
+  }
+  .tema-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:rgba(0,0,0,0.28);
+    border:1.5px solid rgba(212,166,85,0.28);
+    border-radius:10px;
+    padding:14px 10px;
+    color:#f1e7d4;
+    font-family:inherit; font-size:13px; font-weight:700;
+    cursor:pointer;
+    transition: all 0.15s ease;
+    min-height:70px;
+  }
+  .tema-btn:active{ transform:scale(0.97); }
+  .tema-btn .tema-icon{ font-size:24px; line-height:1; }
+  .tema-btn .tema-nome{ font-size:13px; letter-spacing:0.3px; }
+  .tema-btn.active{
+    border-color:#d4a655;
+    background:linear-gradient(180deg, rgba(201,98,31,0.25), rgba(122,47,12,0.35));
+    box-shadow:inset 0 0 16px rgba(201,98,31,0.15);
+    color:#e8c98a;
+  }
+  html[data-theme="light"] .tema-btn{
+    background:rgba(255,255,255,0.5);
+    border-color:rgba(160,74,18,0.25);
+    color:#2a1d12;
+  }
+  html[data-theme="light"] .tema-btn.active{
+    border-color:#a04a12;
+    background:linear-gradient(180deg, rgba(201,90,30,0.15), rgba(160,74,18,0.2));
+    color:#5a2308;
+  }
   #cfgMsg{
     display:none;
     padding:9px 12px; border-radius:7px;
@@ -4625,18 +4741,23 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     <h2 id="cfgTitulo">⚙ Configurações</h2>
     <div class="cfg-subtitle">Ajustes pessoais deste dispositivo</div>
 
-    <!-- Seção: Chave API -->
+    <!-- Seção: Aparência (tema claro/escuro) -->
     <div class="cfg-section">
-      <div class="cfg-section-title">🔑 Chave API (opcional)</div>
-      <label for="cfgApiKey">Sua chave da Anthropic (sk-ant-...)</label>
-      <input type="password" id="cfgApiKey" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false">
-      <div class="cfg-hint">
-        Preencha apenas se você tiver uma chave própria. Ela fica armazenada só neste aparelho
-        e é enviada ao servidor AFIAR nas requisições de IA. Se em branco, o app usa a chave
-        configurada pelo administrador (quando disponível).
+      <div class="cfg-section-title">🎨 Aparência</div>
+      <div class="cfg-hint" style="margin-top:0;margin-bottom:10px;">
+        Escolha entre o tema escuro (padrão, para leitura noturna e economia de bateria) ou claro
+        (fundo pergaminho, ideal para ambientes muito iluminados).
       </div>
-      <button type="button" class="cfg-btn" id="cfgSaveApiKey">Salvar chave</button>
-      <button type="button" class="cfg-btn secondary" id="cfgClearApiKey">Remover</button>
+      <div class="tema-toggle">
+        <button type="button" class="tema-btn" id="btnTemaEscuro" data-tema="escuro">
+          <span class="tema-icon">🌙</span>
+          <span class="tema-nome">Escuro</span>
+        </button>
+        <button type="button" class="tema-btn" id="btnTemaClaro" data-tema="claro">
+          <span class="tema-icon">☀</span>
+          <span class="tema-nome">Claro</span>
+        </button>
+      </div>
     </div>
 
     <!-- Seção: Acesso Admin -->
@@ -4670,19 +4791,12 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 (function(){
   'use strict';
 
-  // ---------- Endpoint (mesmo do resto do app) ----------
-  var ENDPOINT = 'https://script.google.com/macros/s/AKfycbwF7lsxgNEzgx4c4BkwYy-wxMXV9Rz27weIcc5xqZPoMiJSVf718Bq0lc83AraXTPUK/exec';
-
   // ---------- Storage seguro ----------
   var LS = {
     get: function(k, fb){ try{ var v=localStorage.getItem(k); return v===null?fb:v; }catch(e){ return fb; } },
     set: function(k, v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
     del: function(k){ try{ localStorage.removeItem(k); }catch(e){} }
   };
-
-  // ---------- Chave API disponível globalmente ----------
-  // Se alguma parte do app quiser incluir a chave nas requisições:
-  window.getUserApiKey = function(){ return LS.get('lampada_user_api_key', ''); };
 
   // ---------- Referências ----------
   function q(id){ return document.getElementById(id); }
@@ -4698,9 +4812,6 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
   // ---------- Abrir/Fechar modal ----------
   function abrirModal(){
-    // Preenche chave API salva
-    var chave = LS.get('lampada_user_api_key', '');
-    q('cfgApiKey').value = chave;
     // Reseta seção admin
     q('cfgAdminSection').style.display = 'none';
     q('cfgAdminUnlockSection').style.display = '';
@@ -4723,22 +4834,33 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     modal.addEventListener('click', function(e){ if(e.target === modal) fecharModal(); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && modal.classList.contains('open')) fecharModal(); });
 
-    // Salvar chave API
-    q('cfgSaveApiKey').addEventListener('click', function(){
-      var v = (q('cfgApiKey').value || '').trim();
-      if(!v){ showMsg('Digite a chave antes de salvar.', 'err'); return; }
-      if(v.indexOf('sk-ant-') !== 0){
-        showMsg('Chave inválida — deve começar com "sk-ant-".', 'err');
-        return;
+    // ─── Toggle de tema (escuro/claro) ─────────────────────────────
+    function aplicarTema(tema){
+      var html = document.documentElement;
+      if(tema === 'claro'){
+        html.setAttribute('data-theme','light');
+      } else {
+        html.removeAttribute('data-theme');
       }
-      LS.set('lampada_user_api_key', v);
-      showMsg('✓ Chave salva neste aparelho.', 'ok');
-    });
-    q('cfgClearApiKey').addEventListener('click', function(){
-      LS.del('lampada_user_api_key');
-      q('cfgApiKey').value = '';
-      showMsg('Chave removida deste aparelho.', 'info');
-    });
+      // Atualiza meta theme-color (barra do Android/PWA)
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if(meta) meta.setAttribute('content', tema === 'claro' ? '#faf5ea' : '#100b08');
+      // Atualiza os botões (visualmente marca qual está ativo)
+      var btnE = q('btnTemaEscuro'), btnC = q('btnTemaClaro');
+      if(btnE) btnE.classList.toggle('active', tema !== 'claro');
+      if(btnC) btnC.classList.toggle('active', tema === 'claro');
+      // Persiste a escolha
+      LS.set('lampada_tema', tema);
+    }
+    // Aplica o tema salvo ao abrir o modal (para marcar o botão certo)
+    var _abrirModalOriginal = abrirModal;
+    abrirModal = function(){
+      _abrirModalOriginal();
+      aplicarTema(LS.get('lampada_tema','escuro'));
+    };
+    // Wiring dos dois botões
+    if(q('btnTemaEscuro')) q('btnTemaEscuro').addEventListener('click', function(){ aplicarTema('escuro'); });
+    if(q('btnTemaClaro'))  q('btnTemaClaro').addEventListener('click',  function(){ aplicarTema('claro'); });
 
     // Admin: entrar — versão robusta com feedback visual claro
     function tentarEntrarAdmin(){
@@ -4798,25 +4920,29 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
     // Admin: apagar tudo
     q('cfgWipeAll').addEventListener('click', function(){
-      var c1 = confirm('⚠ Tem certeza que deseja APAGAR TUDO da nuvem?\n\nSerão removidas TODAS as publicações do servidor:\n• Revelações\n• Exegeses\n• Contribuições nos Murais\n\nEsta ação é IRREVERSÍVEL.');
+      var c1 = confirm('⚠ Tem certeza que deseja APAGAR TUDO da nuvem?\n\nSerão removidas TODAS as publicações:\n• Revelações\n• Exegeses\n\nEsta ação é IRREVERSÍVEL.');
       if(!c1) return;
       var c2 = prompt('Para confirmar, digite: APAGAR TUDO');
       if(c2 !== 'APAGAR TUDO'){
         showMsg('Confirmação incorreta — nada foi apagado.', 'info');
         return;
       }
-      var params = new URLSearchParams();
-      params.append('action', 'wipeAll');
-      params.append('adminKey', '2016');
-      showMsg('Enviando comando de limpeza ao servidor...', 'info');
-      fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: params })
-        .then(function(){
-          showMsg('✓ Comando enviado. Recarregue a página em alguns segundos para confirmar.', 'ok');
-          setTimeout(function(){ location.reload(); }, 3500);
-        })
-        .catch(function(){
-          showMsg('Falha ao contactar o servidor. Verifique a conexão e tente novamente.', 'err');
-        });
+      if(!LAMPADA_DB.ativo()){
+        showMsg('Firestore não está inicializado. Configure o Firebase primeiro.', 'err');
+        return;
+      }
+      showMsg('Apagando publicações do Firestore...', 'info');
+      LAMPADA_DB.wipeAll(function(r){
+        if(r && r.ok){
+          var t = 'Apagadas ' + (r.apagados.exegeses||0) + ' exegeses e ' +
+                  (r.apagados.revelacoes||0) + ' revelações.';
+          showMsg('✓ ' + t + ' Recarregando...', 'ok');
+          setTimeout(function(){ location.reload(); }, 2500);
+        } else {
+          showMsg('Falha: ' + ((r && r.erro) || 'erro desconhecido') +
+                  '. Verifique as regras de segurança do Firestore.', 'err');
+        }
+      });
     });
   });
 
@@ -4879,8 +5005,63 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     });
   });
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // Auto-crescimento de textareas OICA — cresce conforme o usuário digita
+  // Elimina rolagem interna irritante em campos como Aplicação Pessoal,
+  // Aplicação Coletiva, Contexto, etc, especialmente no mobile.
+  // ═══════════════════════════════════════════════════════════════════════
+  function autoAjustarAltura(ta){
+    if(!ta) return;
+    ta.style.height = 'auto';
+    var alturaMinima = parseFloat(getComputedStyle(ta).minHeight) || 90;
+    var nova = Math.max(alturaMinima, ta.scrollHeight + 2);
+    ta.style.height = nova + 'px';
+  }
+  // Delegação de eventos: pega qualquer textarea dentro de .ff em toda a página
+  document.addEventListener('input', function(e){
+    var t = e.target;
+    if(t && t.tagName === 'TEXTAREA' && t.closest && t.closest('.ff')){
+      autoAjustarAltura(t);
+    }
+  });
+  // Também ajusta na inicialização (quando o app pré-preenche campos salvos)
+  document.addEventListener('focusin', function(e){
+    var t = e.target;
+    if(t && t.tagName === 'TEXTAREA' && t.closest && t.closest('.ff')){
+      autoAjustarAltura(t);
+    }
+  });
+  // MutationObserver para ajustar assim que os campos são renderizados
+  new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      if(m.addedNodes && m.addedNodes.length){
+        m.addedNodes.forEach(function(n){
+          if(n.nodeType !== 1) return;
+          var tas = n.querySelectorAll ? n.querySelectorAll('.ff textarea') : [];
+          tas.forEach(autoAjustarAltura);
+        });
+      }
+    });
+  }).observe(document.body, {childList:true, subtree:true});
+
 })();
 </script>
+
+<!-- Estilos adicionais para OICA: melhora do placeholder + destaque no campo ativo -->
+<style>
+  .ff textarea::placeholder, .ff input::placeholder{
+    color: rgba(241,231,212,0.35);
+    font-style: italic;
+    opacity: 1;
+  }
+  .ff textarea, .ff input{
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  /* No mobile, textareas OICA sem rolagem interna (o auto-resize resolve) */
+  @media (max-width:520px){
+    .ff textarea{ overflow: hidden; }
+  }
+</style>
 
 </body>
 </html>
