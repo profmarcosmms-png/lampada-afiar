@@ -527,6 +527,20 @@
   .exeg-item p{ margin:0; color:var(--parchment-dim); font-size:14px; line-height:1.55; }
   .exeg-badge{ display:inline-block; font-family:var(--ui); font-size:10px; font-weight:700; padding:2px 9px; border-radius:10px; background:var(--ember-deep); color:var(--gold-soft); }
 
+  /* ── Sistema de estrelas (avaliação de exegeses/revelações/estudos) ── */
+  .star-rating{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); }
+  .star-row{ display:flex; gap:2px; }
+  .star{
+    font-size:22px; line-height:1; cursor:pointer; user-select:none;
+    color:rgba(241,231,212,0.22); transition:color 0.12s, transform 0.1s;
+    min-width:30px; min-height:30px; display:inline-flex; align-items:center; justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .star:active{ transform:scale(1.15); }
+  .star.filled{ color:#d4a655; }
+  .star-info{ font-family:var(--ui); font-size:11px; color:var(--parchment-dim); margin-top:2px; }
+  .star-info em{ color:var(--gold-soft); font-style:normal; font-weight:600; }
+
   /* ===== ORIGINAIS (Strong) ===== */
   .orig-lang-toggle{ display:flex; gap:8px; }
   .orig-lang-toggle button{ flex:1; background:transparent; border:1px solid var(--line); border-radius:8px; color:var(--parchment-dim); font-family:var(--body); font-size:16px; padding:11px; cursor:pointer; transition:all 0.15s; }
@@ -919,7 +933,10 @@
       <button class="btn-primary" id="btnExegese">Abrir Estudo Exegético</button>
 
       <div class="quick-refs">
-        <div class="qr-label">Acervo disponível — toque para abrir:</div>
+        <div class="qr-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span>Acervo disponível — toque para abrir:</span>
+          <button type="button" id="btnAddAcervo" title="Publicar novo estudo no Acervo" style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(212,166,85,0.12);border:1px solid rgba(212,166,85,0.4);color:#d4a655;font-size:15px;font-weight:800;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+        </div>
         <div class="qr-chips" id="qrChips"></div>
       </div>
     </section>
@@ -2267,6 +2284,80 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
         .catch(function(e){ console.warn('[LÂMPADA_DB] listarRevelacoes:', e); onDone && onDone([]); });
     },
 
+    // ── ACERVO (estudos exegéticos curados, publicados pelo admin) ────
+    addEstudo: function(item, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var doc = Object.assign({}, item, { criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      db.collection('acervo').doc(item.chave).set(doc)
+        .then(function(){ onDone && onDone({ok:true, id:item.chave, modo:'compartilhado'}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+    listarEstudos: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone([]); return; }
+      db.collection('acervo').get()
+        .then(function(snap){
+          var itens = [];
+          snap.forEach(function(d){ var o = d.data(); o.chave = d.id; itens.push(o); });
+          onDone && onDone(itens);
+        })
+        .catch(function(e){ console.warn('[LÂMPADA_DB] listarEstudos:', e); onDone && onDone([]); });
+    },
+
+    // ── CURIOSIDADES (murais bíblico/hebraico, com aprovação do admin) ──
+    addCuriosidade: function(item, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var doc = Object.assign({}, item, { aprovada:false, criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+      db.collection('curiosidades').add(doc)
+        .then(function(ref){ onDone && onDone({ok:true, id:ref.id, modo:'compartilhado'}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+    listarCuriosidades: function(onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone([]); return; }
+      db.collection('curiosidades').get()
+        .then(function(snap){
+          var itens = [];
+          snap.forEach(function(d){ var o = d.data(); o.id = d.id; itens.push(o); });
+          onDone && onDone(itens);
+        })
+        .catch(function(e){ console.warn('[LÂMPADA_DB] listarCuriosidades:', e); onDone && onDone([]); });
+    },
+    aprovarCuriosidade: function(id, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      db.collection('curiosidades').doc(id).update({ aprovada:true })
+        .then(function(){ onDone && onDone({ok:true}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+    rejeitarCuriosidade: function(id, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      db.collection('curiosidades').doc(id).delete()
+        .then(function(){ onDone && onDone({ok:true}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+
+    // ── AVALIAÇÃO POR ESTRELAS (exegeses, revelações, estudos do acervo) ──
+    // Usa set(...,{merge:true}) em vez de update() para funcionar mesmo em
+    // documentos que ainda não têm os campos de estrela (ex: os 11 estudos
+    // embutidos, que não existem como documento até receberem o 1º voto).
+    // somaDelta/qtdDelta usam FieldValue.increment — operação atômica no
+    // servidor, segura mesmo com vários usuários votando ao mesmo tempo.
+    avaliarItem: function(colecao, docId, somaDelta, qtdDelta, onDone){
+      var db = this._get();
+      if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
+      var campos = {
+        estrelas_soma: firebase.firestore.FieldValue.increment(somaDelta),
+        estrelas_qtd:  firebase.firestore.FieldValue.increment(qtdDelta)
+      };
+      db.collection(colecao).doc(docId).set(campos, { merge:true })
+        .then(function(){ onDone && onDone({ok:true}); })
+        .catch(function(e){ onDone && onDone({ok:false, erro:e.message}); });
+    },
+
     // ── QUIZ ─────────────────────────────────────────────────
     // Estrutura recomendada: coleção 'config' → documento 'quiz' → campos {tema, perguntas:[...]}
     buscarQuiz: function(onDone){
@@ -2282,8 +2373,8 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     wipeAll: function(onDone){
       var db = this._get();
       if(!db){ onDone && onDone({ok:false, erro:'Firestore indisponível'}); return; }
-      var colecoes = ['exegeses','revelacoes'];
-      var stats = { exegeses:0, revelacoes:0 };
+      var colecoes = ['exegeses','revelacoes','curiosidades'];
+      var stats = { exegeses:0, revelacoes:0, curiosidades:0 };
       var i = 0;
       function proxima(){
         if(i >= colecoes.length){ onDone && onDone({ok:true, apagados:stats}); return; }
@@ -2313,6 +2404,12 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   var EXEG_KEY = 'lampada_exegeses_v3';
   function getExegLocais(){ try{ return JSON.parse(safeStorage.get(EXEG_KEY,'[]')); }catch(e){ return []; } }
   function addExegLocal(item){ var l=getExegLocais(); l.unshift(item); safeStorage.set(EXEG_KEY, JSON.stringify(l.slice(0,500))); }
+  // Remove da fila local depois de confirmado no Firestore — evita que o
+  // autor veja seu próprio envio duplicado (cópia local + cópia remota).
+  function removerExegLocal(localId){
+    var l = getExegLocais().filter(function(x){ return x.id !== localId; });
+    safeStorage.set(EXEG_KEY, JSON.stringify(l));
+  }
 
   // validações
   function nomeValido(n){
@@ -2337,6 +2434,102 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     return p[0]+' '+p[p.length-1];
   }
 
+  // ============================================================
+  // SISTEMA DE ESTRELAS — avaliação de exegeses, revelações e
+  // estudos do Acervo publicados pela comunidade.
+  // ============================================================
+  var AVALIACOES_KEY = 'lampada_avaliacoes_v1'; // {docId: estrelas} — voto do PRÓPRIO aparelho
+  function getAvaliacoes(){ try{ return JSON.parse(safeStorage.get(AVALIACOES_KEY,'{}')); }catch(e){ return {}; } }
+  function getMeuVoto(docId){ return getAvaliacoes()[docId] || 0; }
+  function setMeuVoto(docId, estrelas){
+    var av = getAvaliacoes(); av[docId] = estrelas;
+    safeStorage.set(AVALIACOES_KEY, JSON.stringify(av));
+  }
+
+  // Gera o HTML do widget (5 estrelas + média + contagem)
+  function starWidgetHtml(colecao, docId, somaAtual, qtdAtual){
+    if(!docId) return ''; // itens ainda não sincronizados não podem ser avaliados
+    somaAtual = somaAtual || 0; qtdAtual = qtdAtual || 0;
+    var media = qtdAtual > 0 ? (somaAtual/qtdAtual) : 0;
+    var meuVoto = getMeuVoto(docId);
+    var baseExibida = meuVoto || Math.round(media);
+    var estrelasHtml = '';
+    for(var i=1;i<=5;i++){
+      var preenchida = i <= baseExibida;
+      estrelasHtml += '<span class="star'+(preenchida?' filled':'')+'" '+
+        'data-star-col="'+esc(colecao)+'" data-star-id="'+esc(docId)+'" data-star-v="'+i+'">★</span>';
+    }
+    return '<div class="star-rating" data-star-widget="'+esc(docId)+'" data-star-soma="'+somaAtual+'" data-star-qtd="'+qtdAtual+'">'+
+      '<div class="star-row">'+estrelasHtml+'</div>'+
+      '<div class="star-info" id="starinfo-'+esc(docId)+'">'+starInfoTexto(meuVoto, media, qtdAtual)+'</div></div>';
+  }
+
+  function starInfoTexto(meuVoto, media, qtd){
+    if(meuVoto){
+      var t = 'Você avaliou '+meuVoto+'★';
+      if(qtd>0) t += ' · média geral '+media.toFixed(1)+' ('+qtd+(qtd===1?' avaliação':' avaliações')+')';
+      return t;
+    }
+    if(qtd>0) return media.toFixed(1)+' · '+qtd+(qtd===1?' avaliação':' avaliações')+' — toque para avaliar';
+    return 'Seja o primeiro a avaliar';
+  }
+
+  // Registra o voto: calcula o delta certo (1º voto, troca de voto, ou clique repetido)
+  // e atualiza a tela otimisticamente antes da resposta do servidor.
+  function registrarVoto(colecao, docId, novaEstrela, widgetEl){
+    var anterior = getMeuVoto(docId);
+    if(anterior === novaEstrela) return; // clicou na mesma nota — nada a fazer
+
+    var somaDelta, qtdDelta;
+    if(anterior === 0){ somaDelta = novaEstrela; qtdDelta = 1; }
+    else { somaDelta = novaEstrela - anterior; qtdDelta = 0; }
+
+    if(!LAMPADA_DB.ativo()){
+      alert('Avaliações exigem conexão com o servidor (Firestore). Tente novamente quando estiver online.');
+      return;
+    }
+
+    // Atualização otimista da UI (antes mesmo da resposta do servidor)
+    setMeuVoto(docId, novaEstrela);
+    if(widgetEl){
+      var somaNova = (parseFloat(widgetEl.getAttribute('data-star-soma'))||0) + somaDelta;
+      var qtdNova  = (parseInt(widgetEl.getAttribute('data-star-qtd'),10)||0) + qtdDelta;
+      widgetEl.setAttribute('data-star-soma', somaNova);
+      widgetEl.setAttribute('data-star-qtd', qtdNova);
+      widgetEl.querySelectorAll('.star').forEach(function(s){
+        var v = parseInt(s.getAttribute('data-star-v'),10);
+        s.classList.toggle('filled', v<=novaEstrela);
+      });
+      var mediaNova = qtdNova>0 ? (somaNova/qtdNova) : 0;
+      var infoEl = widgetEl.querySelector('.star-info');
+      if(infoEl) infoEl.textContent = starInfoTexto(novaEstrela, mediaNova, qtdNova);
+    }
+
+    LAMPADA_DB.avaliarItem(colecao, docId, somaDelta, qtdDelta, function(res){
+      if(!res || !res.ok){
+        setMeuVoto(docId, anterior); // desfaz localmente se o servidor recusou
+        alert('Não foi possível registrar sua avaliação. Tente novamente.');
+      }
+    });
+  }
+
+  // Delegação de clique nas estrelas — funciona em qualquer container que
+  // contenha widgets .star-rating (murais de exegeses, revelações, acervo)
+  function wireStarRatings(container){
+    if(!container || container.__starsWired) return;
+    container.__starsWired = true;
+    container.addEventListener('click', function(e){
+      var star = e.target.closest ? e.target.closest('.star') : null;
+      if(!star) return;
+      e.stopPropagation(); // não deixa o clique também abrir/fechar o card
+      var col = star.getAttribute('data-star-col');
+      var id  = star.getAttribute('data-star-id');
+      var v   = parseInt(star.getAttribute('data-star-v'),10);
+      var widget = star.closest('.star-rating');
+      registrarVoto(col, id, v, widget);
+    });
+  }
+
   // ---------------------------------------------------------------
   // COMUNICAÇÃO COM O BACKEND (Firestore)
   //
@@ -2349,7 +2542,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     addExegLocal(item); // salva localmente ANTES — garantia mesmo sem rede
     if(!LAMPADA_DB.ativo()){ onDone({ok:true, modo:'local'}); return; }
     LAMPADA_DB.addExegese(item, function(r){
-      if(r && r.ok) onDone({ok:true, modo:'compartilhado'});
+      if(r && r.ok){ removerExegLocal(item.id); onDone({ok:true, modo:'compartilhado'}); }
       else          onDone({ok:false, modo:'erro', erro: (r && r.erro) || 'falha ao enviar'});
     });
   }
@@ -2779,6 +2972,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
         item('Referência cruzada (C)', x.cross)+
         item('Aplicação pessoal (A)', x.apPessoal)+
         item('Aplicação congregacional (A)', x.apColetiva)+
+        starWidgetHtml('exegeses', x.id, x.estrelas_soma, x.estrelas_qtd)+
       '</div></div>';
   }
 
@@ -2825,13 +3019,19 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
   function getRevLocais(){ try{ return JSON.parse(safeStorage.get(REV_KEY,'[]')); }catch(e){ return []; } }
   function addRevLocal(item){ var l=getRevLocais(); l.unshift(item); safeStorage.set(REV_KEY,JSON.stringify(l.slice(0,500))); }
+  // Remove da fila local depois de confirmado no Firestore — evita duplicidade
+  // do próprio envio (mesma lógica de removerExegLocal, para Revelações).
+  function removerRevLocal(localId){
+    var l = getRevLocais().filter(function(x){ return x.id !== localId; });
+    safeStorage.set(REV_KEY, JSON.stringify(l));
+  }
 
   // Envia revelação ao backend (Firestore)
   function enviarRevelacao(item, onDone){
     addRevLocal(item);
     if(!LAMPADA_DB.ativo()){ onDone({ok:true,modo:'local'}); return; }
     LAMPADA_DB.addRevelacao(item, function(r){
-      if(r && r.ok) onDone({ok:true,modo:'compartilhado'});
+      if(r && r.ok){ removerRevLocal(item.id); onDone({ok:true,modo:'compartilhado'}); }
       else          onDone({ok:false,modo:'erro',erro: (r && r.erro) || 'falha ao enviar'});
     });
   }
@@ -2847,6 +3047,76 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       var idsR={}; remotas.forEach(function(r){if(r.id)idsR[r.id]=true;});
       var pend=locais.filter(function(l){return !idsR[l.id];});
       onDone(pend.concat(remotas),'compartilhado');
+    });
+  }
+
+  // ============================================================
+  // ACERVO EXEGÉTICO — publicação de novos estudos (admin, senha própria)
+  // Os estudos publicados ficam salvos no Firestore (coleção 'acervo')
+  // e são mesclados no objeto ACERVO em tempo de execução, para que
+  // popularChips(), resolverPassagem() e buscarPassagem() os enxerguem
+  // exatamente como enxergam os 11 estudos que já vêm embutidos.
+  // ============================================================
+  var ESTUDO_KEY = 'lampada_estudos_admin_v1'; // fila local (garantia offline)
+  function getEstudosLocais(){ try{ return JSON.parse(safeStorage.get(ESTUDO_KEY,'[]')); }catch(e){ return []; } }
+  function addEstudoLocal(item){ var l=getEstudosLocais(); l.unshift(item); safeStorage.set(ESTUDO_KEY, JSON.stringify(l.slice(0,200))); }
+
+  // Gera uma chave única a partir da referência digitada, seguindo o
+  // mesmo padrão dos estudos embutidos: "joao_3_16", "salmo_23" etc.
+  // Referências com intervalo de versículos (ex: "13:1-4") usam só o capítulo,
+  // igual ao padrão já existente em "salmo_23" (Salmo 23:1-4).
+  function slugifyReferencia(ref){
+    var s = (ref||'').trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // remove acentos
+      .toLowerCase();
+    var temIntervalo = /-/.test(s);
+    // separa livro, capítulo, primeiro versículo
+    var m = s.match(/^([1-3]?\s?[a-zç]+)\s*(\d+)?[:.\s]*(\d+)?/);
+    var chave;
+    if(m){
+      var livro = m[1].replace(/\s+/g,'_');
+      var cap = m[2] || '';
+      var vers = (!temIntervalo && m[3]) ? m[3] : '';
+      chave = livro + (cap ? '_'+cap : '') + (vers ? '_'+vers : '');
+    } else {
+      chave = s.replace(/[^a-z0-9]+/g,'_');
+    }
+    chave = chave.replace(/_+/g,'_').replace(/^_|_$/g,'');
+    // evita colisão com chave já existente no acervo
+    var base = chave, i = 2;
+    while(ACERVO[chave]){ chave = base + '_v' + i; i++; }
+    return chave;
+  }
+
+  // Envia um novo estudo ao backend (mesmo padrão de enviarExegese/enviarRevelacao)
+  function enviarEstudo(item, onDone){
+    addEstudoLocal(item);
+    if(!LAMPADA_DB.ativo()){ onDone({ok:true, modo:'local'}); return; }
+    LAMPADA_DB.addEstudo(item, function(r){
+      if(r && r.ok) onDone({ok:true, modo:'compartilhado'});
+      else          onDone({ok:false, modo:'erro', erro:(r && r.erro) || 'falha ao enviar'});
+    });
+  }
+
+  // Mescla um estudo (formato ACERVO) no objeto ACERVO global em memória
+  function mesclarEstudoNoAcervo(item){
+    var chave = item.chave;
+    if(!chave) return;
+    var copia = {};
+    for(var k in item){ if(k!=='chave' && k!=='criadoEm') copia[k]=item[k]; }
+    ACERVO[chave] = copia;
+  }
+
+  // Busca no Firestore os estudos publicados por outros dispositivos/sessões
+  // e os mescla no ACERVO local — assim o "Acervo Disponível" fica igual
+  // para todo mundo, sincronizado, e não apenas no aparelho de quem publicou.
+  function carregarEstudosAcervo(onDone){
+    var locais = getEstudosLocais();
+    locais.forEach(mesclarEstudoNoAcervo); // garante que o próprio publicador já veja, mesmo offline
+    if(!LAMPADA_DB.ativo()){ onDone && onDone('local'); return; }
+    LAMPADA_DB.listarEstudos(function(remotos){
+      remotos.forEach(mesclarEstudoNoAcervo);
+      onDone && onDone('compartilhado');
     });
   }
 
@@ -3469,6 +3739,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     _revCount2=0;
     host.innerHTML=lista.map(function(x){return revCardHtml(x);}).join('');
     wireRevCards(host);
+    wireStarRatings(host);
   }
 
   var _revCount2=0;
@@ -3498,6 +3769,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
         di('🧠 Confronto cognitivo',x.rhemaCognitiva)+
         di('❤️ Confronto afetivo',x.rhemaAfetiva)+
         di('⚡ Passo de obediência',x.rhemaPratica)+
+        starWidgetHtml('revelacoes', x.id, x.estrelas_soma, x.estrelas_qtd)+
       '</div>'+
     '</div>';
   }
@@ -3563,16 +3835,18 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       var cards = doTexto.map(function(x){ return exegCardHtml(x); }).join('');
       host.innerHTML = sectionShell('🌐', 'Exegeses compartilhadas ('+doTexto.length+')', cards);
       wireExegCards(host); // ativa event delegation nos novos cards
+      wireStarRatings(host);
     });
   }
 
   // ---- Renderiza estudo de uma passagem ----
-  function renderExegese(d, fromRepo){
+  function renderExegese(d, fromRepo, chave){
     currentStudy = d;
     var isGreek = (d.idioma_original||'').indexOf('greg') !== -1;
     var html = '';
 
     html += '<div class="mural-status" style="border-color:rgba(212,166,85,0.3);">📖 <strong style="color:var(--gold-soft);">Exegese modelo</strong> — estudo aprofundado de referência. Abaixo, contribua com a sua própria exegese pelo método OICA.</div>';
+    html += starWidgetHtml('acervo', chave, d.estrelas_soma, d.estrelas_qtd);
     html += '<button class="print-btn" id="btnPrint">🖨️ Imprimir / Salvar PDF</button>';
 
     // Texto e versões
@@ -3634,6 +3908,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
     var r = el('results');
     r.innerHTML = html;
+    wireStarRatings(r);
 
     var pb = el('btnPrint');
     if(pb) pb.addEventListener('click', function(){ window.print(); });
@@ -3682,7 +3957,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   function buscarPassagem(entrada){
     var chave = resolverPassagem(entrada);
     if(chave && ACERVO[chave]){
-      renderExegese(ACERVO[chave], false);
+      renderExegese(ACERVO[chave], false, chave);
     } else {
       mostrarNaoEncontrado(entrada);
     }
@@ -3691,7 +3966,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     var chave = resolverPassagem(ref);
     if(chave && ACERVO[chave]){
       el('verseInput').value = ACERVO[chave].referencia;
-      renderExegese(ACERVO[chave], false);
+      renderExegese(ACERVO[chave], false, chave);
     } else {
       el('verseInput').value = ref;
       mostrarNaoEncontrado(ref);
@@ -3779,6 +4054,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     _exegCount = 0; // reseta contador de IDs
     el('repoList').innerHTML = lista.map(function(x){ return exegCardHtml(x); }).join('');
     wireExegCards(el('repoList')); // activa event delegation nos novos cards
+    wireStarRatings(el('repoList'));
   }
 
   // ============================================================
@@ -3925,7 +4201,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
   window.__abrirEstudo = function(chave, ev){
     if(ev) ev.stopPropagation();
-    if(ACERVO[chave]){ switchTab('estudo'); el('verseInput').value = ACERVO[chave].referencia; renderExegese(ACERVO[chave], false); }
+    if(ACERVO[chave]){ switchTab('estudo'); el('verseInput').value = ACERVO[chave].referencia; renderExegese(ACERVO[chave], false, chave); }
   };
 
   // seleção de versículo no leitor
@@ -3955,7 +4231,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     switchTab('estudo');
     if(estudoKey && ACERVO[estudoKey]){
       el('verseInput').value = ACERVO[estudoKey].referencia;
-      renderExegese(ACERVO[estudoKey], false);
+      renderExegese(ACERVO[estudoKey], false, estudoKey);
     } else {
       renderLaboratorio(livroAtual, capAtual, vn, ref, texto);
     }
@@ -4312,21 +4588,56 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     {titulo:"O número 7 é símbolo de completude na cultura hebraica", texto:"Sheva (H7651), sete, vem de uma raiz que significa satisfação e completude. Deus descansou no sétimo dia; há 7 festas no calendário levítico; o Jubileu vem após 7 x 7 anos. O padrão se repete no Apocalipse.", ref:"Gn 2:2; Lv 23; Lv 25:8; Ap 1:20", autor:"AFIAR"}
   ];
 
+  // ── Publicação/leitura de curiosidades via Firestore (com aprovação) ──────
+  var CURIO_KEY = 'lampada_curiosidades_v1';
+  function getCuriosLocais(){ try{ return JSON.parse(safeStorage.get(CURIO_KEY,'[]')); }catch(e){ return []; } }
+  function addCurioLocal(item){ var l=getCuriosLocais(); l.unshift(item); safeStorage.set(CURIO_KEY, JSON.stringify(l.slice(0,200))); }
+
+  function enviarCuriosidade(item, onDone){
+    addCurioLocal(item);
+    if(!LAMPADA_DB.ativo()){ onDone({ok:true, modo:'local'}); return; }
+    LAMPADA_DB.addCuriosidade(item, function(r){
+      if(r && r.ok) onDone({ok:true, modo:'compartilhado'});
+      else          onDone({ok:false, modo:'erro', erro:(r && r.erro)||'falha ao enviar'});
+    });
+  }
+
+  // Busca no Firestore apenas as curiosidades já aprovadas pelo admin, do tipo pedido
+  function carregarCuriosidadesAprovadas(tipo, onDone){
+    if(!LAMPADA_DB.ativo()){ onDone([], 'local'); return; }
+    var done=false;
+    var t=setTimeout(function(){ if(!done){done=true;onDone([],'offline');} },12000);
+    LAMPADA_DB.listarCuriosidades(function(remotas){
+      if(done) return; clearTimeout(t); done=true;
+      var aprovadas = remotas.filter(function(c){ return c.tipo===tipo && c.aprovada===true; });
+      onDone(aprovadas, 'compartilhado');
+    });
+  }
+
   function renderMuralCurios(tipo){
-    var lista = (tipo==='biblica') ? CURIO_BIBLICA_LOCAL : CURIO_HEBRAICA_LOCAL;
+    var embutidas = (tipo==='biblica') ? CURIO_BIBLICA_LOCAL : CURIO_HEBRAICA_LOCAL;
     var host = (tipo==='biblica') ? el('muralBiblica') : el('muralHebraica');
     if(!host) return;
-    host.innerHTML = lista.map(function(c,i){
-      return '<div class="curio-card">'+
-        '<div class="curio-card-head collapsed" onclick="__toggleCurio(this)">'+
-          '<div><div class="cc-title">'+esc(c.titulo)+'</div>'+
-          '<div class="cc-author">'+esc(c.autor||'')+'</div></div>'+
-          '<div class="cc-chev">▼</div></div>'+
-        '<div class="curio-card-body collapsed">'+
-          '<p>'+esc(c.texto)+'</p>'+
-          '<span class="ref-tag">📌 '+esc(c.ref)+'</span>'+
-        '</div></div>';
-    }).join('');
+
+    function pintar(comunitarias){
+      var todas = embutidas.concat(comunitarias || []);
+      host.innerHTML = todas.map(function(c){
+        var autor = c.autor || (c.nome ? primeiroUltimo(c.nome) : '');
+        return '<div class="curio-card">'+
+          '<div class="curio-card-head collapsed" onclick="__toggleCurio(this)">'+
+            '<div><div class="cc-title">'+esc(c.titulo)+'</div>'+
+            '<div class="cc-author">'+esc(autor)+'</div></div>'+
+            '<div class="cc-chev">▼</div></div>'+
+          '<div class="curio-card-body collapsed">'+
+            '<p>'+esc(c.texto)+'</p>'+
+            '<span class="ref-tag">📌 '+esc(c.ref)+'</span>'+
+          '</div></div>';
+      }).join('');
+    }
+
+    pintar([]); // mostra os 5 estudos embutidos de imediato, sem esperar a rede
+    carregarCuriosidadesAprovadas(tipo, function(comunitarias){ pintar(comunitarias); });
+
     // formulário de contribuição
     var label = (tipo==='biblica') ? 'bíblica' : 'da cultura hebraica';
     el('muralContribPanel').innerHTML =
@@ -4356,11 +4667,22 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     if(!ref) faltas.push('A referência bíblica é obrigatória.');
     if(!nomeValido(nome)) faltas.push('Informe nome e sobrenome.');
     if(faltas.length){ erroEl.innerHTML='• '+faltas.join('<br>• '); erroEl.classList.add('show'); return; }
-    var item={action:'curio', tipo:tipo, titulo:titulo, texto:texto, ref:ref, nome:nome, id:'cu'+Date.now().toString(36), savedAt:new Date().toLocaleString('pt-BR')};
-    el('btnCurioEnviar').disabled=true; el('btnCurioEnviar').textContent='Enviando...';
-    enviarExegese(item, function(res){
-      okEl.innerHTML = '✓ Curiosidade enviada! Aparecerá no mural após revisão do Ev. Marcos Monteiro.';
-      okEl.classList.add('show'); el('btnCurioEnviar').textContent='✓ Enviada';
+    var item={tipo:tipo, titulo:titulo, texto:texto, ref:ref, nome:nome, id:'cu'+Date.now().toString(36), savedAt:new Date().toLocaleString('pt-BR')};
+    var btn = el('btnCurioEnviar');
+    btn.disabled=true; btn.textContent='Enviando...';
+    enviarCuriosidade(item, function(res){
+      btn.disabled=false; btn.textContent='🌐 Publicar curiosidade';
+      if(!res.ok){
+        erroEl.innerHTML = 'Falha ao enviar: '+esc(res.erro||'erro desconhecido');
+        erroEl.classList.add('show');
+        return;
+      }
+      okEl.innerHTML = (res.modo==='local')
+        ? '✓ Curiosidade salva neste aparelho. <em>Modo local: configure o Firestore para compartilhar com todos.</em>'
+        : '✓ Curiosidade enviada! Aparecerá no mural após revisão do Ev. Marcos Monteiro.';
+      okEl.classList.add('show');
+      el('curioTitulo').value=''; el('curioTexto').value=''; el('curioRef').value='';
+      document.getElementById('ccCurio').textContent='0/400';
     });
   }
 
@@ -4556,6 +4878,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
   // ---- Wire up ----
   function init(){
     popularChips();
+    carregarEstudosAcervo(function(){ popularChips(); }); // mescla estudos publicados por outros dispositivos
     popularTermos();
     el('repoCount').textContent = getExegLocais().length;
     el('revCount').textContent  = getRevLocais().length;
@@ -4595,6 +4918,25 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); }
   else { init(); }
+
+  // ── Exposição para o bloco de extensões (Configurações/Admin) ──────────────
+  // LAMPADA_DB, popularChips, enviarEstudo etc. são locais a esta IIFE; o
+  // painel de Configurações roda num <script> isolado e precisa desses
+  // pontos de entrada. (Corrige também o botão "Apagar TUDO da nuvem", que
+  // chamava LAMPADA_DB sem esta exposição.)
+  window.LAMPADA_DB = LAMPADA_DB;
+  window.popularChips = popularChips;
+  window.__publicarEstudoAcervo = function(dados, onDone){
+    var chave = slugifyReferencia(dados.referencia);
+    dados.chave = chave;
+    enviarEstudo(dados, function(res){
+      if(res.ok){ mesclarEstudoNoAcervo(dados); popularChips(); }
+      onDone(res, chave);
+    });
+  };
+  window.__abrirEstudoPublicado = function(chave){
+    if(ACERVO[chave]){ switchTab('estudo'); el('verseInput').value = ACERVO[chave].referencia; renderExegese(ACERVO[chave], false, chave); }
+  };
 
 })();
 </script>
@@ -4764,8 +5106,8 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     <div class="cfg-section" id="cfgAdminUnlockSection">
       <div class="cfg-section-title">🔐 Acesso administrativo</div>
       <label for="cfgAdminPass">Senha administrativa</label>
-      <input type="password" id="cfgAdminPass" placeholder="••••" autocomplete="off" inputmode="numeric">
-      <div class="cfg-hint">Somente para o responsável pela plataforma.</div>
+      <input type="password" id="cfgAdminPass" placeholder="••••" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore inputmode="numeric">
+      <div class="cfg-hint">Somente para o responsável pela plataforma. Confidencial — não aceite oferta do navegador para salvar esta senha.</div>
       <button type="button" class="cfg-btn" id="cfgAdminUnlock">Entrar como admin</button>
     </div>
 
@@ -4775,7 +5117,12 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       <div class="cfg-hint" style="margin-top:0;margin-bottom:12px;">
         Você é o único capaz de ver esta seção. Use com cuidado — as ações são <strong>irreversíveis</strong>.
       </div>
-      <button type="button" class="cfg-btn danger" id="cfgWipeAll">🗑 Apagar TUDO da nuvem</button>
+      <button type="button" class="cfg-btn" id="cfgRevisarCurios">📋 Revisar curiosidades pendentes</button>
+      <div class="cfg-hint" style="margin-top:6px;">
+        Aprove ou rejeite as curiosidades enviadas pelos usuários antes que apareçam nos Murais.
+      </div>
+
+      <button type="button" class="cfg-btn danger" id="cfgWipeAll" style="margin-top:16px;">🗑 Apagar TUDO da nuvem</button>
       <div class="cfg-hint" style="margin-top:6px;">
         Remove todas as publicações do servidor: Revelações, Exegeses e contribuições nos Murais.
         Use em casos de conteúdo indevido publicado pela comunidade.
@@ -4920,7 +5267,7 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
 
     // Admin: apagar tudo
     q('cfgWipeAll').addEventListener('click', function(){
-      var c1 = confirm('⚠ Tem certeza que deseja APAGAR TUDO da nuvem?\n\nSerão removidas TODAS as publicações:\n• Revelações\n• Exegeses\n\nEsta ação é IRREVERSÍVEL.');
+      var c1 = confirm('⚠ Tem certeza que deseja APAGAR TUDO da nuvem?\n\nSerão removidas TODAS as publicações:\n• Revelações\n• Exegeses\n• Curiosidades (murais)\n\nEsta ação é IRREVERSÍVEL.');
       if(!c1) return;
       var c2 = prompt('Para confirmar, digite: APAGAR TUDO');
       if(c2 !== 'APAGAR TUDO'){
@@ -4934,8 +5281,9 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
       showMsg('Apagando publicações do Firestore...', 'info');
       LAMPADA_DB.wipeAll(function(r){
         if(r && r.ok){
-          var t = 'Apagadas ' + (r.apagados.exegeses||0) + ' exegeses e ' +
-                  (r.apagados.revelacoes||0) + ' revelações.';
+          var t = 'Apagadas ' + (r.apagados.exegeses||0) + ' exegeses, ' +
+                  (r.apagados.revelacoes||0) + ' revelações e ' +
+                  (r.apagados.curiosidades||0) + ' curiosidades.';
           showMsg('✓ ' + t + ' Recarregando...', 'ok');
           setTimeout(function(){ location.reload(); }, 2500);
         } else {
@@ -5062,6 +5410,437 @@ var BIBLIA={"gn":[["No princípio criou Deus os céus e a terra.","A terra era s
     .ff textarea{ overflow: hidden; }
   }
 </style>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!--  EXTENSÃO v3 (Prof. Marcos): Publicação de Estudos no Acervo (senha própria) -->
+<!--  Este bloco é isolado. Se removido, o app volta ao estado anterior.         -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  #acervoModal{
+    display:none; position:fixed; inset:0; z-index:10001;
+    background:rgba(0,0,0,0.82); overflow-y:auto; padding:24px 16px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #acervoModal.open{ display:block; }
+  #acervoModalBox{
+    max-width:560px; margin:24px auto; position:relative;
+    background:linear-gradient(180deg, #1a120c 0%, #100b08 100%);
+    border:1.5px solid #d4a655; border-radius:14px;
+    padding:22px 20px 26px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.7), 0 0 60px rgba(201,98,31,0.15);
+    color:#f1e7d4;
+  }
+  #acervoModalBox h2{ margin:0 0 6px; font-size:20px; color:#f1e7d4; font-family:Georgia,serif; }
+  #acervoModalBox .cfg-subtitle{ font-size:13px; color:rgba(241,231,212,0.65); margin-bottom:18px; }
+  #acervoModalBox .cfg-close{ position:absolute; top:12px; right:14px; background:none; border:none; color:rgba(241,231,212,0.6); font-size:26px; cursor:pointer; line-height:1; }
+  .est-section-title{ font-family:var(--ui); font-size:12px; font-weight:800; color:#d4a655; text-transform:uppercase; letter-spacing:1px; margin:20px 0 4px; padding-top:14px; border-top:1px solid rgba(212,166,85,0.2); }
+  .est-section-title:first-of-type{ border-top:none; padding-top:0; margin-top:6px; }
+  .est-section-hint{ font-family:var(--ui); font-size:12px; color:rgba(241,231,212,0.55); margin-bottom:10px; line-height:1.5; }
+  .est-subrow{ display:flex; gap:10px; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed rgba(212,166,85,0.18); }
+  .est-subrow:last-child{ border-bottom:none; }
+  .est-subrow-num{ flex-shrink:0; width:24px; height:24px; border-radius:50%; background:rgba(212,166,85,0.14); border:1px solid rgba(212,166,85,0.35); color:#d4a655; font-family:var(--ui); font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:4px; }
+  .est-subrow-fields{ flex:1; min-width:0; }
+  .est-mini{ margin-bottom:8px; }
+  .est-mini label{ display:block; font-family:var(--ui); font-size:11px; color:rgba(241,231,212,0.6); margin-bottom:3px; }
+  .est-mini input, .est-mini textarea{ width:100%; box-sizing:border-box; background:#0b0705; border:1px solid #3a2818; color:#f1e7d4; border-radius:6px; padding:9px 10px; font-family:var(--body); font-size:14px; }
+  .est-mini textarea{ min-height:52px; resize:vertical; line-height:1.5; }
+  .est-mini input:focus, .est-mini textarea:focus{ outline:none; border-color:#d4a655; }
+  .est-versoes{ display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:6px; }
+  .est-versoes .est-mini{ margin-bottom:0; }
+</style>
+
+<!-- Modal: Publicação de Estudo no Acervo -->
+<div id="acervoModal" role="dialog" aria-modal="true">
+  <div id="acervoModalBox">
+    <button type="button" class="cfg-close" id="acervoCloseBtn" aria-label="Fechar">×</button>
+    <h2>📖 Publicar Estudo no Acervo</h2>
+    <div class="cfg-subtitle">Adiciona um novo estudo exegético completo ao "Acervo disponível" — visível para todos os usuários, com a mesma formatação dos 11 estudos já existentes.</div>
+
+    <!-- Etapa 1: senha -->
+    <div id="acervoSenhaSection">
+      <div class="ff">
+        <label>Senha de publicação<span class="req">*</span></label>
+        <input type="password" id="estSenha" placeholder="••••••••" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore>
+      </div>
+      <div class="est-section-hint">Somente para o Ev. Marcos Monteiro ou quem ele autorizar.</div>
+      <div class="form-error" id="estSenhaErro"></div>
+      <button type="button" class="btn-share" id="btnEstSenhaEntrar">Entrar</button>
+    </div>
+
+    <!-- Etapa 2: formulário completo (some até a senha ser validada) -->
+    <div id="acervoFormSection" style="display:none;">
+
+      <div class="ff"><label>Referência bíblica<span class="req">*</span></label>
+        <input type="text" id="estRef" placeholder="Ex: 1 Coríntios 13:1"></div>
+
+      <div class="ff"><label>Idioma original<span class="req">*</span></label>
+        <select id="estIdioma" style="width:100%;box-sizing:border-box;background:var(--bg-altar);border:1px solid var(--line);border-radius:8px;padding:14px;color:var(--parchment);font-family:var(--ui);font-size:16px;">
+          <option value="grego">Ελληνικά · Grego (Novo Testamento)</option>
+          <option value="hebraico">עברית · Hebraico (Antigo Testamento)</option>
+        </select></div>
+
+      <div class="ff"><label>Texto no idioma original<span class="req">*</span></label>
+        <textarea id="estTextoOriginal" placeholder="Cole aqui o texto em hebraico ou grego..."></textarea></div>
+
+      <div class="est-section-title">Traduções (preencha ao menos uma)</div>
+      <div class="est-versoes">
+        <div class="est-mini"><label>ACF</label><input id="estV_ACF" placeholder="Texto na versão ACF..."></div>
+        <div class="est-mini"><label>ARA</label><input id="estV_ARA" placeholder="Texto na versão ARA..."></div>
+        <div class="est-mini"><label>NVI</label><input id="estV_NVI" placeholder="Texto na versão NVI..."></div>
+        <div class="est-mini"><label>NTLH</label><input id="estV_NTLH" placeholder="Texto na versão NTLH..."></div>
+      </div>
+
+      <div class="est-section-title">Palavras-chave no original (mínimo 3 preenchidas)</div>
+      <div class="est-section-hint">Uma por linha: a palavra no original, a transliteração, a tradução literal e o significado teológico — igual aos estudos já existentes.</div>
+      <div id="estPcContainer"></div>
+
+      <div class="est-section-title">Referências cruzadas (mínimo 3 preenchidas)</div>
+      <div class="est-section-hint">A referência e a explicação de como ela se relaciona com o texto-base.</div>
+      <div id="estRcContainer"></div>
+
+      <div class="est-section-title">Esboço homilético (mínimo 3 pontos)</div>
+      <div class="est-section-hint">O ponto do esboço e sua explicação — como nos estudos já existentes.</div>
+      <div id="estEsContainer"></div>
+
+      <div class="est-section-title">Contexto e aplicação</div>
+      <div class="ff"><label>Contexto literário<span class="req">*</span></label>
+        <textarea id="estCtxLit" placeholder="Gênero, estrutura, posição no livro..."></textarea></div>
+      <div class="ff"><label>Contexto histórico<span class="req">*</span></label>
+        <textarea id="estCtxHist" placeholder="Autor, data, destinatários, cenário histórico..."></textarea></div>
+      <div class="ff"><label>Aplicação pessoal<span class="req">*</span></label>
+        <textarea id="estApInd" placeholder="Como este texto se aplica à vida do crente hoje..."></textarea></div>
+      <div class="ff"><label>Aplicação congregacional<span class="req">*</span></label>
+        <textarea id="estApCol" placeholder="Como este texto se aplica à igreja/célula/ministério..."></textarea></div>
+
+      <div class="form-error" id="estErro"></div>
+      <div class="form-ok" id="estOk"></div>
+      <button type="button" class="btn-share" id="btnEstPublicar">🌐 Publicar no Acervo</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  function q(id){ return document.getElementById(id); }
+
+  // Gera as linhas repetíveis (palavras-chave, referências cruzadas, esboço)
+  function gerarSubrows(container, n, campos){
+    var html = '';
+    for(var i=1;i<=n;i++){
+      html += '<div class="est-subrow"><div class="est-subrow-num">'+i+'</div><div class="est-subrow-fields">';
+      campos.forEach(function(c){
+        var idAttr = 'id="'+c.id+i+'"';
+        var phAttr = 'placeholder="'+c.ph+'"';
+        var campo = (c.tipo==='textarea')
+          ? '<textarea '+idAttr+' '+phAttr+'></textarea>'
+          : '<input '+idAttr+' '+phAttr+'>';
+        html += '<div class="est-mini"><label>'+c.label+'</label>'+campo+'</div>';
+      });
+      html += '</div></div>';
+    }
+    container.innerHTML = html;
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var btnAdd = q('btnAddAcervo');
+    var modal = q('acervoModal');
+    if(!btnAdd || !modal) return;
+
+    // Monta os grupos de linhas repetíveis uma única vez
+    gerarSubrows(q('estPcContainer'), 5, [
+      {id:'estPcOrig', label:'Palavra no original', ph:'Ex: ἀγάπη / חֶסֶד'},
+      {id:'estPcTl',   label:'Transliteração', ph:'Ex: agápē / chesed'},
+      {id:'estPcLit',  label:'Tradução literal', ph:'Ex: amor'},
+      {id:'estPcSig',  label:'Significado teológico', ph:'Explique o peso teológico do termo...', tipo:'textarea'}
+    ]);
+    gerarSubrows(q('estRcContainer'), 6, [
+      {id:'estRcRef', label:'Referência', ph:'Ex: Romanos 5:8'},
+      {id:'estRcRel', label:'Relação com o texto-base', ph:'Explique a conexão teológica...', tipo:'textarea'}
+    ]);
+    gerarSubrows(q('estEsContainer'), 5, [
+      {id:'estEsP', label:'Ponto do esboço', ph:'Ex: A origem do amor: Deus'},
+      {id:'estEsE', label:'Explicação', ph:'Desenvolva o ponto...', tipo:'textarea'}
+    ]);
+
+    function abrirModal(){
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      q('acervoSenhaSection').style.display = '';
+      q('acervoFormSection').style.display = 'none';
+      q('estSenha').value = '';
+      q('estSenhaErro').classList.remove('show');
+    }
+    function fecharModal(){
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    btnAdd.addEventListener('click', abrirModal);
+    q('acervoCloseBtn').addEventListener('click', fecharModal);
+    modal.addEventListener('click', function(e){ if(e.target === modal) fecharModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && modal.classList.contains('open')) fecharModal(); });
+
+    // ── Etapa 1: validação da senha própria desta função ──
+    function tentarSenha(){
+      var raw = q('estSenha').value || '';
+      var senha = raw.replace(/[\s\u00a0\u200b-\u200f\ufeff]/g, '');
+      var erro = q('estSenhaErro');
+      if(senha !== 'mmslampada26'){
+        erro.textContent = '❌ Senha incorreta.';
+        erro.classList.add('show');
+        return;
+      }
+      erro.classList.remove('show');
+      q('acervoSenhaSection').style.display = 'none';
+      q('acervoFormSection').style.display = '';
+      try{ q('estRef').focus(); }catch(e){}
+    }
+    q('btnEstSenhaEntrar').addEventListener('click', tentarSenha);
+    q('estSenha').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); tentarSenha(); } });
+
+    // ── Etapa 2: coleta, valida e publica ──
+    function valorOu(id){ var e=q(id); return e ? e.value.trim() : ''; }
+
+    function coletarGrupo(prefixo, n, campos){
+      var linhas = [];
+      for(var i=1;i<=n;i++){
+        var obj = {};
+        var vazio = true;
+        campos.forEach(function(nomeCampo){
+          var v = valorOu(prefixo+nomeCampo+i);
+          obj[nomeCampo] = v;
+          if(v) vazio = false;
+        });
+        if(!vazio) linhas.push(obj);
+      }
+      return linhas;
+    }
+
+    function montarDados(){
+      var versoes = [];
+      [['ACF','estV_ACF'],['ARA','estV_ARA'],['NVI','estV_NVI'],['NTLH','estV_NTLH']].forEach(function(p){
+        var t = valorOu(p[1]);
+        if(t) versoes.push({v:p[0], t:t});
+      });
+
+      var pc = [];
+      for(var i=1;i<=5;i++){
+        var orig=valorOu('estPcOrig'+i), tl=valorOu('estPcTl'+i), lit=valorOu('estPcLit'+i), sig=valorOu('estPcSig'+i);
+        if(orig||tl||lit||sig) pc.push({orig:orig, tl:tl, lit:lit, sig:sig});
+      }
+      var rc = [];
+      for(var j=1;j<=6;j++){
+        var r=valorOu('estRcRef'+j), rel=valorOu('estRcRel'+j);
+        if(r||rel) rc.push({r:r, rel:rel});
+      }
+      var es = [];
+      for(var k=1;k<=5;k++){
+        var p=valorOu('estEsP'+k), e2=valorOu('estEsE'+k);
+        if(p||e2) es.push({p:p, e:e2});
+      }
+
+      return {
+        referencia: valorOu('estRef'),
+        idioma_original: q('estIdioma').value,
+        texto_original: valorOu('estTextoOriginal'),
+        versoes: versoes,
+        palavras_chave: pc,
+        referencias_cruzadas: rc,
+        esboco: es,
+        contexto_literario: valorOu('estCtxLit'),
+        contexto_historico: valorOu('estCtxHist'),
+        aplicacao_individual: valorOu('estApInd'),
+        aplicacao_coletiva: valorOu('estApCol')
+      };
+    }
+
+    function validar(dados){
+      var faltas = [];
+      if(!dados.referencia) faltas.push('Informe a referência bíblica.');
+      if(!dados.texto_original) faltas.push('Cole o texto no idioma original.');
+      if(dados.versoes.length < 1) faltas.push('Preencha ao menos uma tradução (ACF, ARA, NVI ou NTLH).');
+      if(dados.palavras_chave.length < 3) faltas.push('Preencha ao menos 3 palavras-chave completas.');
+      if(dados.referencias_cruzadas.length < 3) faltas.push('Preencha ao menos 3 referências cruzadas.');
+      if(dados.esboco.length < 3) faltas.push('Preencha ao menos 3 pontos do esboço.');
+      if(!dados.contexto_literario) faltas.push('Preencha o contexto literário.');
+      if(!dados.contexto_historico) faltas.push('Preencha o contexto histórico.');
+      if(!dados.aplicacao_individual) faltas.push('Preencha a aplicação pessoal.');
+      if(!dados.aplicacao_coletiva) faltas.push('Preencha a aplicação congregacional.');
+      return faltas;
+    }
+
+    q('btnEstPublicar').addEventListener('click', function(){
+      var erroEl = q('estErro'), okEl = q('estOk');
+      erroEl.classList.remove('show'); okEl.classList.remove('show');
+
+      var dados = montarDados();
+      var faltas = validar(dados);
+      if(faltas.length){
+        erroEl.innerHTML = '<strong>Complete antes de publicar:</strong><br>• '+faltas.join('<br>• ');
+        erroEl.classList.add('show');
+        try{ erroEl.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){}
+        return;
+      }
+
+      if(typeof window.__publicarEstudoAcervo !== 'function'){
+        erroEl.textContent = 'Erro interno: função de publicação não encontrada.';
+        erroEl.classList.add('show');
+        return;
+      }
+
+      var btn = q('btnEstPublicar');
+      btn.disabled = true; btn.textContent = 'Publicando...';
+
+      window.__publicarEstudoAcervo(dados, function(res, chave){
+        btn.disabled = false; btn.textContent = '🌐 Publicar no Acervo';
+        if(!res.ok){
+          erroEl.innerHTML = '<strong>Falha ao publicar:</strong> '+(res.erro||'erro desconhecido');
+          erroEl.classList.add('show');
+          return;
+        }
+        okEl.innerHTML = (res.modo==='local')
+          ? '✓ Estudo salvo neste aparelho. <em>Modo local: configure o Firestore para sincronizar com todos os usuários.</em>'
+          : '✓ Estudo publicado no Acervo! Já está disponível para todos os usuários da plataforma.';
+        okEl.classList.add('show');
+        setTimeout(function(){
+          fecharModal();
+          if(typeof window.__abrirEstudoPublicado === 'function'){ window.__abrirEstudoPublicado(chave); }
+        }, 1400);
+      });
+    });
+
+  });
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!--  EXTENSÃO v4 (Prof. Marcos): Revisão de Curiosidades pendentes (admin)      -->
+<!--  Este bloco é isolado. Se removido, o app volta ao estado anterior.         -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+
+<style>
+  #curioReviewModal{
+    display:none; position:fixed; inset:0; z-index:10001;
+    background:rgba(0,0,0,0.82); overflow-y:auto; padding:24px 16px;
+  }
+  #curioReviewModal.open{ display:block; }
+  #curioReviewModalBox{
+    max-width:560px; margin:24px auto; position:relative;
+    background:linear-gradient(180deg, #1a120c 0%, #100b08 100%);
+    border:1.5px solid #d4a655; border-radius:14px;
+    padding:22px 20px 26px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.7), 0 0 60px rgba(201,98,31,0.15);
+    color:#f1e7d4;
+  }
+  #curioReviewModalBox h2{ margin:0 0 6px; font-size:20px; color:#f1e7d4; font-family:Georgia,serif; }
+  #curioReviewModalBox .cfg-subtitle{ font-size:13px; color:rgba(241,231,212,0.65); margin-bottom:18px; }
+  #curioReviewModalBox .cfg-close{ position:absolute; top:12px; right:14px; background:none; border:none; color:rgba(241,231,212,0.6); font-size:26px; cursor:pointer; line-height:1; }
+  .crc-card{ background:rgba(0,0,0,0.28); border:1px solid rgba(212,166,85,0.28); border-radius:10px; padding:14px; margin-bottom:12px; }
+  .crc-tipo{ font-family:var(--ui); font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#d4a655; margin-bottom:6px; }
+  .crc-titulo{ font-family:Georgia,serif; font-weight:800; font-size:15px; color:#f1e7d4; margin-bottom:6px; }
+  .crc-texto{ font-family:var(--body); font-size:14px; color:rgba(241,231,212,0.9); line-height:1.55; margin-bottom:8px; }
+  .crc-ref{ display:inline-block; font-family:var(--ui); font-size:12px; font-weight:700; color:var(--ink); background:#d4a655; border-radius:4px; padding:3px 9px; margin-bottom:8px; }
+  .crc-autor{ font-family:var(--ui); font-size:11px; color:rgba(241,231,212,0.5); margin-bottom:10px; }
+  .crc-actions{ display:flex; gap:8px; }
+  .crc-actions button{ flex:1; min-height:40px; border-radius:8px; font-family:var(--ui); font-weight:700; font-size:13px; cursor:pointer; border:1px solid; }
+  .crc-aprovar{ background:linear-gradient(180deg,#5a9a5a,#3a6b3a); border-color:#8fbf7a; color:#f1e7d4; }
+  .crc-rejeitar{ background:transparent; border-color:#c0574f; color:#e8b3ad; }
+  #curioReviewEmpty, #curioReviewLoading{ text-align:center; padding:30px 10px; font-family:var(--ui); font-size:13px; color:rgba(241,231,212,0.55); }
+</style>
+
+<div id="curioReviewModal" role="dialog" aria-modal="true">
+  <div id="curioReviewModalBox">
+    <button type="button" class="cfg-close" id="curioReviewCloseBtn" aria-label="Fechar">×</button>
+    <h2>📋 Curiosidades Pendentes</h2>
+    <div class="cfg-subtitle">Aprove para publicar no mural correspondente, ou rejeite para excluir definitivamente.</div>
+    <div id="curioReviewLoading">Carregando...</div>
+    <div id="curioReviewEmpty" style="display:none;">Nenhuma curiosidade pendente no momento.</div>
+    <div id="curioReviewList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  function q(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var btnAbrir = q('cfgRevisarCurios');
+    var modal = q('curioReviewModal');
+    if(!btnAbrir || !modal) return;
+
+    function fecharModal(){ modal.classList.remove('open'); document.body.style.overflow=''; }
+    q('curioReviewCloseBtn').addEventListener('click', fecharModal);
+    modal.addEventListener('click', function(e){ if(e.target===modal) fecharModal(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && modal.classList.contains('open')) fecharModal(); });
+
+    function renderCard(item){
+      var div = document.createElement('div');
+      div.className = 'crc-card';
+      var tipoLabel = item.tipo==='biblica' ? 'Curiosidade Bíblica' : 'Cultura Hebraica';
+      div.innerHTML =
+        '<div class="crc-tipo">'+esc(tipoLabel)+'</div>'+
+        '<div class="crc-titulo">'+esc(item.titulo)+'</div>'+
+        '<div class="crc-texto">'+esc(item.texto)+'</div>'+
+        '<div class="crc-ref">📌 '+esc(item.ref)+'</div>'+
+        '<div class="crc-autor">Enviado por '+esc(item.nome||'—')+' · '+esc(item.savedAt||'')+'</div>'+
+        '<div class="crc-actions">'+
+          '<button class="crc-aprovar">✓ Aprovar</button>'+
+          '<button class="crc-rejeitar">✗ Rejeitar</button>'+
+        '</div>';
+      div.querySelector('.crc-aprovar').addEventListener('click', function(){
+        var btn = this; btn.disabled = true; btn.textContent = '...';
+        window.LAMPADA_DB.aprovarCuriosidade(item.id, function(r){
+          if(r && r.ok){ div.remove(); checarVazio(); }
+          else { btn.disabled=false; btn.textContent='✓ Aprovar'; alert('Falha ao aprovar: '+((r&&r.erro)||'erro desconhecido')); }
+        });
+      });
+      div.querySelector('.crc-rejeitar').addEventListener('click', function(){
+        if(!confirm('Rejeitar e excluir esta curiosidade definitivamente?')) return;
+        var btn = this; btn.disabled = true; btn.textContent = '...';
+        window.LAMPADA_DB.rejeitarCuriosidade(item.id, function(r){
+          if(r && r.ok){ div.remove(); checarVazio(); }
+          else { btn.disabled=false; btn.textContent='✗ Rejeitar'; alert('Falha ao rejeitar: '+((r&&r.erro)||'erro desconhecido')); }
+        });
+      });
+      return div;
+    }
+
+    function checarVazio(){
+      var lista = q('curioReviewList');
+      q('curioReviewEmpty').style.display = lista.children.length ? 'none' : '';
+    }
+
+    function abrirModal(){
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      var lista = q('curioReviewList');
+      lista.innerHTML = '';
+      q('curioReviewEmpty').style.display = 'none';
+      q('curioReviewLoading').style.display = '';
+
+      if(typeof window.LAMPADA_DB === 'undefined' || !window.LAMPADA_DB.ativo()){
+        q('curioReviewLoading').style.display = 'none';
+        q('curioReviewEmpty').textContent = 'Firestore indisponível — não é possível revisar agora.';
+        q('curioReviewEmpty').style.display = '';
+        return;
+      }
+
+      window.LAMPADA_DB.listarCuriosidades(function(itens){
+        q('curioReviewLoading').style.display = 'none';
+        var pendentes = (itens||[]).filter(function(i){ return i.aprovada===false; });
+        pendentes.forEach(function(item){ lista.appendChild(renderCard(item)); });
+        checarVazio();
+      });
+    }
+
+    btnAbrir.addEventListener('click', abrirModal);
+  });
+})();
+</script>
 
 </body>
 </html>
